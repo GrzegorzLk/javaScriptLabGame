@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Time Game</title>
+    
+</head>
+<body>
+    <div id="game">
+        <div id="intro">Welcome to the Reaction Time Game! Click the button to start the game and test your reaction time.</div>
+        <button id="startButton">Start</button>
+        <div id="message"></div>
+        <div id="highscore"></div>
+		<div id="stats"></div>
+        <button id="resetButton">Reset High Score</button>
+    </div>
+
+    <script>
+        const startButton = document.getElementById('startButton');
+        const message = document.getElementById('message');
+        const highscore = document.getElementById('highscore');
+		 const stats = document.getElementById('stats');
+        const resetButton = document.getElementById('resetButton');
+        let startTime, endTime, winTimeout, looseTimeout;
+        let highscoreArray = []; 
+        let clickedTooSoon = false; 
+
+        startButton.addEventListener('click', startGame);
+        resetButton.addEventListener('click', resetHighScore);
+
+        function startGame() {
+            message.textContent = 'Wait for it...'; 
+            startButton.disabled = true; 
+
+            const randomDelay = Math.random() * 2000 + 1000; 
+	
+			looseTimeout = setTimeout(() => {
+				document.body.addEventListener('click', recordReactionTime); 
+                clickedTooSoon = true;
+            }, 300);
+
+            winTimeout = setTimeout(() => {
+                document.body.style.backgroundColor = 'lightgreen';
+                startTime = Date.now();
+                clickedTooSoon = false;
+            }, randomDelay);
+        }
+
+        function recordReactionTime() {
+		let reactionTime;           
+		   if (!clickedTooSoon) {
+                endTime = Date.now(); 
+                reactionTime = endTime - startTime; 
+                displayReactionTime(reactionTime); 
+            } else {
+				reactionTime = 1/0;
+                message.textContent = 'Oops! You clicked too soon. You lose!';
+            }
+			highscoreArray.push(reactionTime); 
+            highscoreArray.sort((a, b) => a - b); 
+           
+            displayhighscore(); 
+			displayStats();
+			resetGame(); 
+        }
+
+        function displayReactionTime(reactionTime) {
+            message.textContent = `Your reaction time is ${reactionTime} ms`;
+        }
+
+        function displayhighscore() {
+            highscore.innerHTML = 'High score: <br>'; 
+            const list = document.createElement('ul'); 
+
+            highscoreArray.forEach((time, index) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${index + 1}: ${time} ms`;
+                list.appendChild(listItem);
+            });
+            highscore.appendChild(list);
+        }
+		
+        function displayStats() {
+			stats.innerHTML = `Statistics: <br>`;          
+			const validTimes = highscoreArray.filter(time => time !== Infinity);
+            if (validTimes.length > 0) {
+                const minTime = Math.min(...validTimes);
+                const maxTime = Math.max(...validTimes);
+                const avgTime = validTimes.reduce((acc, time) => acc + time, 0) / validTimes.length;
+                stats.innerHTML += `Min Time: ${minTime} ms<br>`;
+                stats.innerHTML += `Max Time: ${maxTime} ms<br>`;
+                stats.innerHTML += `Average Time: ${Math.floor(avgTime)} ms`;
+            } else {
+                stats.innerHTML = 'Play some more to see statistics.';
+            }
+        }
+
+        function resetGame() {
+            clearTimeout(winTimeout); 
+			clearTimeout(looseTimeout);
+            document.body.style.backgroundColor = '#f0f0f0'; 
+            document.body.removeEventListener('click', recordReactionTime);
+            startButton.disabled = false;
+        }
+
+        function resetHighScore() {
+            highscoreArray = []; 
+            displayhighscore();
+			displayStats();
+        }
+    </script>
+</body>
+
+<style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #game {
+            text-align: center;
+        }
+        #startButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 24px;
+        }
+        #highscore {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        #resetButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #resetInfo {
+            font-size: 14px;
+            color: #555;
+        }
+        #intro {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+    </style>
+</html>
